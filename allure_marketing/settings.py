@@ -31,10 +31,12 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap4',
     'core',
+    "debug_toolbar",
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,11 +119,12 @@ USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
+STATIC_URL = '/staticfiles/'
 
 # produciton
 # In settings.py
-STATIC_ROOT = '/var/www/allure-marketing/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # development
 STATICFILES_DIRS = [
@@ -168,4 +171,9 @@ DEBUG_PROPAGATE_EXCEPTIONS = True
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
+]
+
+INTERNAL_IPS = [
+    "127.0.0.1",
+    "localhost",
 ]

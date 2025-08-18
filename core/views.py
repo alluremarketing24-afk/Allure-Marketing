@@ -19,36 +19,58 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.timezone import now
 
+from django.core.cache import cache
+from .models import Video, Service, VideoType, SiteSettings
+from .forms import ContactForm
+
+from django.core.cache import cache
+from .models import Video, Service, VideoType, SiteSettings
+from .forms import ContactForm
+
 def home(request):
-    """Home page view with all sections"""
-    # Get featured videos for portfolio
-    videos = Video.objects.filter(is_featured=True).order_by('order', '-video_created_at')[:6]
+    """Optimized Home page view with caching & fewer DB hits"""
 
-
-    # Get active services
-    services = Service.objects.filter(is_active=True)
-
-    # Get all video types
-    video_types = VideoType.objects.all()
-
-    # Get site settings
-    try:
+    # ✅ Cache site settings (only 1 row, rarely changes)
+    site_settings = cache.get("site_settings")
+    if site_settings is None:
         site_settings = SiteSettings.objects.first()
-    except SiteSettings.DoesNotExist:
-        site_settings = None
+        cache.set("site_settings", site_settings, 60 * 5)  # 5 min cache
 
-    # ❌ Don't process POST here; handled via AJAX
+    # ✅ Cache featured videos (since usually static)
+    videos = cache.get("featured_videos")
+    if videos is None:
+        videos = (
+            Video.objects.filter(is_featured=True)
+            .select_related("video_type")  # avoids extra query if you show video_type
+            .order_by("order", "-video_created_at")[:6]
+        )
+        cache.set("featured_videos", list(videos), 60 * 5)  # cast to list for caching
+
+    # ✅ Cache video types (small table, still saves a query per request)
+    video_types = cache.get("video_types")
+    if video_types is None:
+        video_types = list(VideoType.objects.all())
+        cache.set("video_types", video_types, 60 * 5)
+
+    # ✅ Services (dynamic, but we optimize query with select_related)
+    services = (
+        Service.objects.filter(is_active=True)
+        .select_related("icon")  # avoids N+1 queries for icons
+        .order_by("order", "name")
+    )
+
+    # Contact form
     form = ContactForm()
 
     context = {
-        'videos': videos,
-        'services': services,
-        'video_types': video_types,
-        'site_settings': site_settings,
-        'form': form,  # still needed to render empty form
+        "videos": videos,
+        "services": services,
+        "video_types": video_types,
+        "site_settings": site_settings,
+        "form": form,
     }
+    return render(request, "core/home.html", context)
 
-    return render(request, 'core/home.html', context)
 
 @csrf_exempt
 @require_http_methods(["POST"])
