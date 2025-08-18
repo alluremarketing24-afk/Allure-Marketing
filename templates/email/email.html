@@ -1,0 +1,32 @@
+<!-- templates/contact_email.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f8f9fa; color: #212529; }
+    .container { background-color: #ffffff; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .heading { font-size: 20px; font-weight: bold; margin-bottom: 16px; color: #000000; }
+    .field { margin-bottom: 10px; }
+    .label { font-weight: bold; }
+    .value { color: #333333; }
+    .footer { font-size: 12px; color: #6c757d; margin-top: 24px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="heading">New Contact Form Submission</div>
+
+    <div class="field"><span class="label">Name:</span> <span class="value">{{ name }}</span></div>
+    <div class="field"><span class="label">Email:</span> <a href="mailto:{{ email }}">{{ email }}</a></div>
+    <div class="field"><span class="label">Contact:</span> <span class="value">{{ contact }}</span></div>
+    <div class="field"><span class="label">Business Name:</span> <span class="value">{{ business_name }}</span></div>
+    <div class="field"><span class="label">Instagram ID:</span> <span class="value">{{ insta_id }}</span></div>
+    <div class="field"><span class="label">City:</span> <span class="value">{{ city }}</span></div>
+    <div class="field"><span class="label">Service Type:</span> <span class="value">{{ service_type }}</span></div>
+    <div class="field"><span class="label">Decision Maker:</span> <span class="value">{{ is_decision_maker }}</span></div>
+    <div class="field"><span class="label">Message:</span><br><span class="value">{{ message }}</span></div>
+
+    <div class="footer">Submitted at: {{ submitted_at }}</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts - Allure Marketing Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            color: #f0f0f0;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #b8860b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-effect {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-effect border-b border-yellow-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'custom_admin_dashboard' %}" class="text-gray-300 hover:text-yellow-400 transition-colors">
+                        <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    </a>
+                    <h1 class="text-xl font-bold gradient-text">Contact Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'export_contacts_excel' %}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center space-x-2">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Export Excel</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="glass-effect rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-yellow-500/10">
+                        <tr>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Contact Info</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Business Details</th>
+                            {% comment %} <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Decision Maker</th> {% endcomment %}
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        {% for contact in contacts %}
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="px-6 py-4">
+                                <div>
+                                    <div class="text-sm font-medium text-white">{{ contact.name }}</div>
+                                    <div class="text-sm text-gray-400">{{ contact.email }}</div>
+                                    <div class="text-sm text-gray-400">{{ contact.contact }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-white">{{ contact.business_name|default:"-" }}</div>
+                                <div class="text-sm text-gray-400">{{ contact.city|default:"-" }}</div>
+                                <div class="text-sm text-gray-400">@{{ contact.insta_id|default:"-" }}</div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-400">
+                                {{ contact.created_at|date:"M d, Y H:i" }}
+                            </td>
+                            <td class="px-6 py-4">
+                                {% if contact.is_contacted %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                                        Contacted
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                                        New Lead
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">
+                                No contacts found.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

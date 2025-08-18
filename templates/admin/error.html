@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ code }} | {{ title }}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a1a, #2a1f0f);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            font-size: 5rem;
+            color: #f1c40f;
+            margin: 0;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-top: 10px;
+        }
+        p {
+            max-width: 500px;
+            font-size: 1rem;
+            margin: 20px auto;
+            opacity: 0.8;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            background: #f1c40f;
+            color: #000;
+            transition: background 0.3s ease;
+        }
+        a:hover {
+            background: #d4ac0d;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ code }}</h1>
+    <h2>{{ title }}</h2>
+    <p>{{ message }}</p>
+    <a href="/">Go Back Home</a>
+</body>
+</html>

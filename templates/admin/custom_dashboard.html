@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Allure Marketing - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #2a2a2a 100%);
+            color: #f0f0f0;
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #d4af37 0%, #ffd700 50%, #b8860b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .glass-effect {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .stat-card {
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            border-color: rgba(212, 175, 55, 0.6);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="glass-effect border-b border-yellow-500/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-xl font-bold gradient-text">Allure Marketing Admin</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/" class="text-gray-300 hover:text-yellow-400 transition-colors">
+                        <i data-lucide="home" class="w-5 h-5"></i>
+                    </a>
+                    <a href="/admin/" class="text-gray-300 hover:text-yellow-400 transition-colors">
+                        Django Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold gradient-text mb-2">Dashboard</h2>
+            <p class="text-gray-400">Manage your Allure Marketing website</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Videos</p>
+                        <p class="text-2xl font-bold text-white">{{ total_videos }}</p>
+                    </div>
+                    <div class="p-3 bg-yellow-500/20 rounded-lg">
+                        <i data-lucide="video" class="w-6 h-6 text-yellow-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Total Contacts</p>
+                        <p class="text-2xl font-bold text-white">{{ total_contacts }}</p>
+                    </div>
+                    <div class="p-3 bg-blue-500/20 rounded-lg">
+                        <i data-lucide="users" class="w-6 h-6 text-blue-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">New Leads</p>
+                        <p class="text-2xl font-bold text-white">{{ uncontacted_leads }}</p>
+                    </div>
+                    <div class="p-3 bg-green-500/20 rounded-lg">
+                        <i data-lucide="user-plus" class="w-6 h-6 text-green-400"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card p-6 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-400 text-sm">Services</p>
+                        <p class="text-2xl font-bold text-white">{{ total_services }}</p>
+                    </div>
+                    <div class="p-3 bg-purple-500/20 rounded-lg">
+                        <i data-lucide="briefcase" class="w-6 h-6 text-purple-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {% comment %} <a href="{% url 'custom_admin_videos' %}" class="stat-card p-6 rounded-xl hover:scale-105 transition-transform">
+                <div class="text-center">
+                    <i data-lucide="video" class="w-8 h-8 text-yellow-400 mx-auto mb-3"></i>
+                    <h3 class="font-semibold text-white mb-1">Manage Videos</h3>
+                    <p class="text-gray-400 text-sm">Upload and organize videos</p>
+                </div>
+            </a> {% endcomment %}
+
+            <a href="{% url 'custom_admin_contacts' %}" class="stat-card p-6 rounded-xl hover:scale-105 transition-transform">
+                <div class="text-center">
+                    <i data-lucide="mail" class="w-8 h-8 text-blue-400 mx-auto mb-3"></i>
+                    <h3 class="font-semibold text-white mb-1">View Contacts</h3>
+                    <p class="text-gray-400 text-sm">Manage contact submissions</p>
+                </div>
+            </a>
+{% comment %} 
+            <a href="{% url 'custom_admin_services' %}" class="stat-card p-6 rounded-xl hover:scale-105 transition-transform">
+                <div class="text-center">
+                    <i data-lucide="settings" class="w-8 h-8 text-green-400 mx-auto mb-3"></i>
+                    <h3 class="font-semibold text-white mb-1">Edit Services</h3>
+                    <p class="text-gray-400 text-sm">Update service offerings</p>
+                </div>
+            </a> {% endcomment %}
+
+            <a href="{% url 'export_contacts_excel' %}" class="stat-card p-6 rounded-xl hover:scale-105 transition-transform">
+                <div class="text-center">
+                    <i data-lucide="download" class="w-8 h-8 text-purple-400 mx-auto mb-3"></i>
+                    <h3 class="font-semibold text-white mb-1">Export Data</h3>
+                    <p class="text-gray-400 text-sm">Download contact data</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Recent Contacts -->
+            <div class="glass-effect p-6 rounded-xl">
+                <h3 class="text-xl font-bold text-white mb-4">Recent Contacts</h3>
+                <div class="space-y-4">
+                    {% for contact in recent_contacts %}
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div>
+                            <p class="font-semibold text-white">{{ contact.name }}</p>
+                            <p class="text-gray-400 text-sm">{{ contact.email }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-gray-400 text-sm">{{ contact.created_at|date:"M d, Y" }}</p>
+                            {% if not contact.is_contacted %}
+                                <span class="inline-block px-2 py-1 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">New</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-400">No contacts yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Videos -->
+            <div class="glass-effect p-6 rounded-xl">
+                <h3 class="text-xl font-bold text-white mb-4">Recent Videos</h3>
+                <div class="space-y-4">
+                    {% for video in recent_videos %}
+                    <div class="flex items-center justify-between p-4 bg-white/5 rounded-lg">
+                        <div class="flex items-center space-x-3">
+                            {% if video.get_thumbnail_url %}
+                                <img src="{{ video.get_thumbnail_url }}" alt="{{ video.video_name }}" class="w-12 h-12 object-cover rounded-lg">
+                            {% else %}
+                                <div class="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                                    <i data-lucide="video" class="w-6 h-6 text-gray-400"></i>
+                                </div>
+                            {% endif %}
+                            <div>
+                                <p class="font-semibold text-white">{{ video.video_name }}</p>
+                                <p class="text-gray-400 text-sm">{{ video.video_type.name }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-gray-400 text-sm">{{ video.video_created_at|date:"M d, Y" }}</p>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <p class="text-gray-400">No videos uploaded yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}Allure Marketing offers premium branding, design, and marketing solutions that drive business growth{% endblock %}" />
+    <meta name="keywords" content="branding, marketing, design, premium content, influencer marketing, social media marketing, advertising agency" />
+    <meta name="author" content="Allure Marketing" />
+
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{% block og_title %}Allure Marketing - Premium Branding & Design{% endblock %}" />
+    <meta property="og:description" content="{% block og_description %}Allure Marketing provides premium branding, design, and influencer marketing services to take your business to the next level{% endblock %}" />
+    <meta property="og:image" content="{% block og_image %}https://alluremarketing.in/static/images/og-image.png{% endblock %}" />
+    <meta property="og:url" content="{% block og_url %}https://alluremarketing.in{% endblock %}" />
+    <meta property="og:type" content="website" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="{% block twitter_title %}Allure Marketing - Premium Branding & Design{% endblock %}" />
+    <meta name="twitter:description" content="{% block twitter_description %}Premium branding, design, and marketing services to grow your business and reach your audience{% endblock %}" />
+    <meta name="twitter:image" content="{% block twitter_image %}https://alluremarketing.in/static/images/twitter-card-image.png{% endblock %}" />
+
+    <!-- Favicon and Icons -->
+    <link rel="icon" href="https://alluremarketing.in/static/images/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="https://alluremarketing.in/static/images/apple-touch-icon.png" />
+    <link rel="icon" sizes="192x192" href="https://alluremarketing.in/static/images/icon-192x192.png" />
+
+    <title>{% block title %}Allure Marketing - Premium Branding & Design{% endblock %}</title>
+
+    <!-- TailwindCSS CDN -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+    <!-- Google Fonts (Inter) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+    {% block content %}{% endblock %}
+    
+    
+    <script src="{% static 'js/main.js' %}"></script>   
+    {% block extra_js %}{% endblock %}
+
+</body>
+<script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    {% comment %} // Decision maker field toggle
+    const decisionMakerSelect = document.querySelector('select[name="is_decision_maker"]');
+    const decisionMakerFields = document.querySelector('.decision-maker-fields');
+
+    if (decisionMakerSelect) {
+        decisionMakerSelect.addEventListener('change', function() {
+            if (this.value === 'no') {
+                decisionMakerFields.classList.add('show');
+            } else {
+                decisionMakerFields.classList.remove('show');
+            }
+        });
+    } {% endcomment %}
+
+    // Video modal functions
+
+
+    {% comment %} function closeVideoModal() {
+        const modal = document.getElementById('videoModal');
+        const iframe = document.getElementById('videoFrame');
+        const localVideo = document.getElementById('localVideoFrame');
+
+        modal.classList.remove('active');
+        
+        setTimeout(() => {
+            iframe.src = '';
+            localVideo.pause();
+            localVideo.currentTime = 0;
+            document.getElementById('videoSource').src = '';
+            localVideo.load();
+        }, 300);
+
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('videoModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeVideoModal();
+        }
+    });
+
+    // Close modal with ESC key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeVideoModal();
+        }
+    });
+
+    // Video type filtering
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const typeId = this.getAttribute('data-type');
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('bg-yellow-500/20'));
+            this.classList.add('bg-yellow-500/20');
+
+            // Filter videos
+            document.querySelectorAll('.reel-container').forEach(container => {
+                const videoType = container.getAttribute('data-type');
+                if (typeId === 'all' || videoType === typeId) {
+                    container.style.display = 'block';
+                } else {
+                    container.style.display = 'none';
+                }
+            });
+        });
+    }); {% endcomment %}
+</script>
+</html>

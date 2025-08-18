@@ -1,0 +1,590 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hidden video element for local thumbnail generation -->
+<video class="video-thumbnail-generator" id="thumbnailGenerator" muted></video>
+<canvas class="video-thumbnail-generator" id="thumbnailCanvas"></canvas>
+
+<!-- Fixed Navigation -->
+
+<nav class="fixed top-0 w-full z-50 glass-effect">
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+
+        <!-- Enhanced Logo -->
+
+        <div class="flex items-center space-x-3">
+
+            <div class="logo-container">
+                <img src="{% static 'images/logo.jpeg' %}" alt="Allure Marketing Logo">
+
+            </div>
+
+            <div>
+
+                <div class="text-xl font-bold gradient-text">ALLURE</div>
+
+                <div class="text-xs text-gray-400 -mt-1">MARKETING</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Desktop Menu -->
+
+        <ul class="hidden md:flex space-x-8">
+
+            <li><a href="#hero" class="text-white hover:text-yellow-400 transition-colors">Home</a></li>
+
+            <li><a href="#review" class="text-white hover:text-yellow-400 transition-colors">Experience</a></li>
+
+            <li><a href="#services" class="text-white hover:text-yellow-400 transition-colors">Services</a></li>
+
+            <li><a href="#portfolio" class="text-white hover:text-yellow-400 transition-colors">Portfolio</a></li>
+
+            <li><a href="#contact" class="text-white hover:text-yellow-400 transition-colors">Contact</a></li>
+
+        </ul>
+
+
+
+        <!-- Fixed Mobile Menu Button -->
+
+        <div class="md:hidden hamburger" onclick="toggleMobileMenu()" id="hamburger">
+
+            <span></span>
+
+            <span></span>
+
+            <span></span>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- Fixed Mobile Menu -->
+
+    <div id="mobileMenu" class="mobile-menu fixed top-0 left-0 w-full h-screen md:hidden z-40">
+
+        <div class="flex flex-col items-center justify-center h-full space-y-8">
+
+            <a href="#hero" class="text-white hover:text-yellow-400 transition-colors text-3xl font-light"
+                onclick="toggleMobileMenu()">Home</a>
+
+            <a href="#review" class="text-white hover:text-yellow-400 transition-colors text-3xl font-light"
+                onclick="toggleMobileMenu()">Experience</a>
+
+            <a href="#services" class="text-white hover:text-yellow-400 transition-colors text-3xl font-light"
+                onclick="toggleMobileMenu()">Services</a>
+
+            <a href="#portfolio" class="text-white hover:text-yellow-400 transition-colors text-3xl font-light"
+                onclick="toggleMobileMenu()">Portfolio</a>
+
+            <a href="#contact" class="text-white hover:text-yellow-400 transition-colors text-3xl font-light"
+                onclick="toggleMobileMenu()">Contact</a>
+
+        </div>
+
+    </div>
+
+</nav>
+
+
+<!-- Hero Section -->
+<section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+    <div class="absolute inset-0 bg-gradient-to-r from-yellow-600/10 to-yellow-400/10"></div>
+    <div class="text-center z-10 px-4 sm:px-6 max-w-6xl mx-auto">
+        <div class="floating">
+            <h1 class="hero-title text-4xl sm:text-5xl md:text-7xl font-bold mb-6">
+                {% if site_settings.hero_title %}
+                    {{ site_settings.hero_title|safe }}
+                {% else %}
+                    Allure <span class="gradient-text">Marketing</span><br class="hidden sm:block">
+                    That <span class="gradient-text">Elevates</span>
+                {% endif %}
+            </h1>
+        </div>
+        <p class="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            {% if site_settings.hero_subtitle %}
+                {{ site_settings.hero_subtitle }}
+            {% else %}
+                ELEVATE YOUR BRAND WITH STUNNING DIGITAL SOLUTIONS.
+                Allure Marketing crafts premium content, high-ROI Meta ads, and strategic influencer campaigns to drive real growth.
+            {% endif %}
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <a href="#contact" target="_blank">
+                <button class="w-full sm:w-auto px-8 py-4 gold-gradient rounded-full text-black font-semibold hover-glow">
+                    Start Your Project
+                </button>
+            </a>
+            <a href="#portfolio">
+                <button class="w-full sm:w-auto px-8 py-4 glass-effect rounded-full text-white font-semibold hover-glow">
+                    View Our Work
+                </button>
+            </a>
+        </div>
+    </div>
+
+    <!-- Floating Elements -->
+    <div class="absolute top-20 left-4 sm:left-10 w-16 sm:w-20 h-16 sm:h-20 gold-gradient rounded-full opacity-20 floating"></div>
+    <div class="absolute bottom-20 right-4 sm:right-10 w-24 sm:w-32 h-24 sm:h-32 gold-gradient rounded-full opacity-20 floating" style="animation-delay: -3s;"></div>
+</section>
+
+<!-- Enhanced Services Section -->
+<section id="services" class="py-16 sm:py-20 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12 sm:mb-16">
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">Our Services</h2>
+            <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
+                Comprehensive branding solutions that elevate your business to extraordinary heights
+            </p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+            {% for service in services %}
+            <div class="service-card p-6 sm:p-8 rounded-2xl">
+                <div class="service-icon w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                    {% if service.icon %}
+                        {% if service.icon.is_lucide %}
+                            <i data-lucide="{{ service.icon.icon_class }}" class="w-8 h-8"></i>
+                        {% elif service.icon.icon_image %}
+                            <img src="{{ service.icon.icon_image.url }}" alt="{{ service.icon.name }}" class="w-8 h-8">
+                        {% endif %}
+                    {% else %}
+                        <i data-lucide="star" class="w-8 h-8"></i>
+                    {% endif %}
+                </div>
+                <h3 class="text-xl sm:text-2xl font-bold mb-4">{{ service.name }}</h3>
+                <p class="text-gray-400 mb-6 text-sm sm:text-base">{{ service.description }}</p>
+                <ul class="text-xs sm:text-sm text-gray-300 space-y-3">
+                    {% for point in service.get_key_points %}
+                    <li class="flex items-center">
+                        <span class="w-2 h-2 gold-gradient rounded-full mr-3"></span>{{ point }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Professional Portfolio Section -->
+<section id="portfolio" class="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-transparent to-gray-900/20">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12 sm:mb-16">
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">Featured Reels & Content</h2>
+            <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
+                Explore our portfolio of viral reels, social media content, and brand storytelling
+            </p>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="flex justify-center gap-4 mb-8 flex-wrap">
+            {% for video_type in video_types %}
+            <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 transition-all" 
+                    data-type="{{ video_type.id }}">
+                {{ video_type.name }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <div class="portfolio-grid" id="video-grid">
+            {% for video in videos %}
+            <div class="reel-container"
+                data-video-src="{{ video.get_video_url }}"
+                onclick="openVideoModal(this)">
+                
+                {% if video.get_thumbnail_url %}
+                    <img src="{{ video.get_thumbnail_url }}" alt="{{ video.video_name }}" class="reel-thumbnail" />
+                {% else %}
+                    <div class="reel-thumbnail bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                        <i data-lucide="play-circle" class="w-16 h-16 text-yellow-500"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="reel-overlay">
+                    <div class="reel-play-button"></div>
+                    <div class="mt-auto">
+                        <h3 class="text-lg font-bold text-white mb-2">{{ video.video_name }}</h3>
+                        <p class="text-sm text-gray-300 mb-4">{{ video.video_description|truncatechars:100 }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% endfor %}       
+        </div>
+        
+        
+    </div>
+</section>
+
+<!-- Your Experience, Our Pride Section -->
+<section id="review" class="py-16 sm:py-20 px-4 sm:px-6 relative overflow-hidden">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <!-- Left Side - Text Content -->
+            <div class="lg:pr-8">
+                <h2 class="text-4xl sm:text-5xl md:text-6xl font-bold mb-6">
+                    Your <span class="gradient-text">Experience</span>,<br>
+                    Our <span class="gradient-text">Pride</span>
+                </h2>
+                <p class="text-lg sm:text-xl text-gray-300 mb-8 leading-relaxed">
+                    Hear from our growing base of clients who have trusted Allure Marketing to fuel their startup growth.
+                </p>
+            </div>
+
+            <!-- Right Side - Moving Testimonials -->
+            <div class="testimonials-container">
+                <!-- First Row - Moving Left -->
+                <div class="testimonial-row testimonial-row-left">
+                    <div class="testimonial-track">
+                        <!-- Testimonial Cards -->
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">RJ</div>
+                                <div>
+                                    <h4 class="testimonial-name">Ritika Jain</h4>
+                                    <p class="testimonial-role">E-commerce Owner</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">Allure's branding helped us set a professional tone for our business and attract new customers.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">AK</div>
+                                <div>
+                                    <h4 class="testimonial-name">Aniket Khurana</h4>
+                                    <p class="testimonial-role">Freelancer</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">Their Google Ads campaigns helped me target the right audience and scale my freelance business.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">MP</div>
+                                <div>
+                                    <h4 class="testimonial-name">Maya Patel</h4>
+                                    <p class="testimonial-role">Boutique Owner</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">They built a beautiful website for our boutique. Our online orders increased significantly!</p>
+                        </div>
+
+                        <!-- Duplicates for seamless loop -->
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">RJ</div>
+                                <div>
+                                    <h4 class="testimonial-name">Ritika Jain</h4>
+                                    <p class="testimonial-role">E-commerce Owner</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">Allure's branding helped us set a professional tone for our business and attract new customers.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">AK</div>
+                                <div>
+                                    <h4 class="testimonial-name">Aniket Khurana</h4>
+                                    <p class="testimonial-role">Freelancer</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">Their Google Ads campaigns helped me target the right audience and scale my freelance business.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">MP</div>
+                                <div>
+                                    <h4 class="testimonial-name">Maya Patel</h4>
+                                    <p class="testimonial-role">Boutique Owner</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">They built a beautiful website for our boutique. Our online orders increased significantly!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Row - Moving Right -->
+                <div class="testimonial-row testimonial-row-right">
+                    <div class="testimonial-track">
+                        <!-- Cards -->
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">VT</div>
+                                <div>
+                                    <h4 class="testimonial-name">Vikram Thakur</h4>
+                                    <p class="testimonial-role">Tech Entrepreneur</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">Their website development and branding gave my startup the edge it needed to stand out in the market.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">NS</div>
+                                <div>
+                                    <h4 class="testimonial-name">Neha Sharma</h4>
+                                    <p class="testimonial-role">Content Creator</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">The team worked on my social media campaigns, and I saw a huge engagement boost.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">RB</div>
+                                <div>
+                                    <h4 class="testimonial-name">Rohan Bansal</h4>
+                                    <p class="testimonial-role">Real Estate Agent</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">I highly recommend Allure for new businesses. Their strategies helped increase my local reach.</p>
+                        </div>
+
+                        <!-- Duplicates for seamless loop -->
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">VT</div>
+                                <div>
+                                    <h4 class="testimonial-name">Vikram Thakur</h4>
+                                    <p class="testimonial-role">Tech Entrepreneur</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">Their website development and branding gave my startup the edge it needed to stand out in the market.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">NS</div>
+                                <div>
+                                    <h4 class="testimonial-name">Neha Sharma</h4>
+                                    <p class="testimonial-role">Content Creator</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">The team worked on my social media campaigns, and I saw a huge engagement boost.</p>
+                        </div>
+
+                        <div class="testimonial-card-new glass-effect">
+                            <div class="testimonial-header">
+                                <div class="testimonial-avatar" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);">RB</div>
+                                <div>
+                                    <h4 class="testimonial-name">Rohan Bansal</h4>
+                                    <p class="testimonial-role">Real Estate Agent</p>
+                                </div>
+                            </div>
+                            <p class="testimonial-text">I highly recommend Allure for new businesses. Their strategies helped increase my local reach.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Enhanced Contact Section -->
+<section id="contact" class="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-transparent to-gray-900/30">
+    <div class="max-w-7xl mx-auto">
+        <div class="text-center mb-12 sm:mb-16">
+            <h2 class="section-title text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">Let's Elevate</h2>
+            <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
+                Ready to elevate your brand to luxury status? Let's connect and build something extraordinary together.
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16">
+            <!-- Contact Form -->
+            <div class="glass-effect p-6 sm:p-8 rounded-2xl">
+                <h3 class="text-xl sm:text-2xl font-bold mb-6">Get Started Today</h3>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="mb-4 p-4 rounded-lg {% if message.tags == 'success' %}bg-green-600/20 border border-green-500 text-green-300{% elif message.tags == 'error' %}bg-red-600/20 border border-red-500 text-red-300{% else %}bg-yellow-600/20 border border-yellow-500 text-yellow-300{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <form id="contactForm" action="/contact_ajax/" method="POST" class="contact-form space-y-4">
+                    {% csrf_token %}
+                
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>{{ form.name }}</div>
+                        <div>{{ form.contact }}</div>
+                    </div>
+                
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>{{ form.business_name }}</div>
+                        <div>{{ form.insta_id }}</div>
+                    </div>
+                
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        <div>{{ form.city }}</div>
+                        <div>{{ form.service_type }}</div>
+                    </div>
+                    <div>{{ form.email }}</div>
+                
+                    <!-- Conditional Fields Start -->
+                    <div id="decisionFields" class="space-y-4 hidden">
+                        <div id="decisionFields" class="grid sm:grid-cols-2 gap-4 hidden transition-all duration-500 ease-in-out">
+                            <div>
+                              {{ form.decision_maker_email }}
+                            </div>
+                            <div>
+                              {{ form.decision_maker_contact }}
+                            </div>
+                          </div>
+                    </div>
+                    <!-- Conditional Fields End -->
+                
+                    <div>
+                        {{ form.message }}
+                    </div>
+                
+                    <button type="submit" class="w-full gold-gradient text-black font-semibold py-3 px-6 rounded-lg hover-glow transition-all duration-300">
+                        Send Message
+                    </button>
+                </form>
+                
+            </div>
+
+            <!-- Contact Info & WhatsApp -->
+            <div class="space-y-8">
+                <!-- WhatsApp CTA Box -->
+                <div class="glass-effect p-6 sm:p-8 rounded-2xl flex flex-col justify-center items-center text-center">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-4">Start Your Project Instantly</h3>
+                    <p class="text-gray-400 mb-6">
+                        Skip the form — message us directly to discuss your vision. Let's make your brand iconic.
+                    </p>
+                    <a href="https://wa.me/{% if site_settings.whatsapp_number %}{{ site_settings.whatsapp_number }}{% else %}919548190688{% endif %}" target="_blank"
+                       class="flex items-center gap-2 bg-green-500 text-white font-semibold text-lg px-6 py-4 rounded-lg hover:bg-green-600 transition-all duration-300">
+                        <i data-lucide="message-circle" style="color: white;"></i>
+                        Message Us on WhatsApp
+                    </a>
+                </div>
+
+                <!-- Contact & Social -->
+                <div class="glass-effect p-6 sm:p-8 rounded-2xl">
+                    <h3 class="text-xl sm:text-2xl font-bold mb-6">Get In Touch</h3>
+                    <div class="space-y-6">
+                        <div class="flex items-start">
+                            <i data-lucide="mail" class="w-6 h-6 mr-4 mt-1 text-white"></i>
+                            <div>
+                                <h4 class="font-bold mb-1">Email</h4>
+                                <p class="text-gray-400">
+                                    {% if site_settings.contact_email %}{{ site_settings.contact_email }}{% else %}alluremarketing24@gmail.com{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <i data-lucide="phone" class="w-6 h-6 mr-4 mt-1 text-white"></i>
+                            <div>
+                                <h4 class="font-bold mb-1">Phone</h4>
+                                <p class="text-gray-400 text-sm">
+                                    {% if site_settings.contact_phone %}{{ site_settings.contact_phone }}{% else %}+919548190688{% endif %} (WhatsApp)
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="py-8 sm:py-12 px-4 sm:px-6 bg-black/50 mt-16 sm:mt-20">
+    <div class="max-w-7xl mx-auto">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div class="lg:col-span-2">
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="logo-container">
+                        <img src="{% static 'images/logo.jpeg' %}" alt="Allure Marketing Logo">
+                    </div>
+                    <div>
+                        <div class="text-lg font-bold gradient-text">ALLURE</div>
+                        <div class="text-xs text-gray-400 -mt-1">MARKETING</div>
+                    </div>
+                </div>
+                <p class="text-gray-400 text-sm">
+                    Allure Marketing crafts premium content, high-ROI Meta ads, and strategic influencer campaigns to drive real growth.
+                </p>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Services</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="#services" class="hover:text-yellow-400 transition-colors">Website Development</a></li>
+                    <li><a href="#services" class="hover:text-yellow-400 transition-colors">Google Ads Marketing</a></li>
+                    <li><a href="#services" class="hover:text-yellow-400 transition-colors">Content Creation</a></li>
+                    <li><a href="#services" class="hover:text-yellow-400 transition-colors">Branding</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-bold mb-4">Company</h4>
+                <ul class="space-y-2 text-sm text-gray-400">
+                    <li><a href="#review" class="hover:text-yellow-400 transition-colors">About Us</a></li>
+                    <li><a href="#portfolio" class="hover:text-yellow-400 transition-colors">Our Work</a></li>
+                    <li><a href="#review" class="hover:text-yellow-400 transition-colors">Experience</a></li>
+                    <li><a href="#contact" class="hover:text-yellow-400 transition-colors">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+            <p class="text-sm text-gray-500">
+                © 2025 Allure Marketing.
+            </p>
+        </div>
+    </div>
+</footer>
+
+<!-- Modal for Video -->
+<!-- Video Modal -->
+<div id="videoModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm">
+    <div class="relative rounded-3xl overflow-hidden shadow-lg border border-yellow-500" style="max-width: 360px; aspect-ratio: 9/16; box-shadow: 0 0 25px 5px rgba(255, 216, 0, 0.6);">
+  
+      <!-- Local Video -->
+      <video
+        id="localVideoFrame"
+        class="w-full h-full object-cover"
+        autoplay
+        controls
+        playsinline
+      >
+        <source id="videoSource" type="video/mp4">
+        <source type="video/webm">
+        <source type="video/ogg">
+        Your browser does not support the video tag.
+      </video>
+  
+      <!-- Error Message -->
+      <div id="videoError" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-75 text-white text-center text-sm hidden">
+        <p>Sorry, the video could not be loaded.</p>
+      </div>
+  
+      <!-- Close Button -->
+      <button
+        onclick="closeVideoModal()"
+        class="absolute top-2 right-2 text-white text-lg bg-opacity-50 px-2 py-1 rounded hover:bg-opacity-70 transition"
+      >×</button>
+    </div>
+  </div>
+  
+  
+  
+<!-- Toast Notification (Top-left) -->
+<div id="toast" class="fixed top-6 left-4 z-50 hidden bg-gray-900 text-white px-6 py-4 rounded-lg shadow-lg transform transition-all duration-500 ease-in-out -translate-x-full opacity-0">
+    <span id="toast-message" class="font-medium">This is a toast message</span>
+  </div>
+  
+{% endblock %}
+
+    
