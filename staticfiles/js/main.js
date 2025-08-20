@@ -306,58 +306,50 @@ document.addEventListener("DOMContentLoaded", () => {
 // Enhanced form submission
 document.addEventListener("DOMContentLoaded", () => {
   const contactForm = document.getElementById("contactForm")
-  if (contactForm) {
-    contactForm.addEventListener("submit", function (e) {
-      e.preventDefault() // ✅ stop the reload
+  if (!contactForm) return
 
-      const submitBtn = this.querySelector('button[type="submit"]')
-      const originalText = submitBtn.textContent
-      submitBtn.textContent = "Sending..."
-      submitBtn.disabled = true
+  contactForm.addEventListener("submit", function (e) {
+    e.preventDefault()
+    e.stopPropagation()
 
-      const formData = new FormData(contactForm)
-      const data = {}
-      formData.forEach((value, key) => {
-        data[key] = value
-      })
+    const submitBtn = this.querySelector('button[type="submit"]')
+    const originalText = submitBtn.textContent
+    submitBtn.textContent = "Sending..."
+    submitBtn.disabled = true
 
-      console.log("Sending form data via AJAX:", data)
-
-      fetch("/contact_ajax/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": getCookie("csrftoken"),  // Optional if CSRF is enabled
-        },
-        body: JSON.stringify(data),
-      })
-        .then((res) => res.json())
-        .then((result) => {
-          console.log("Backend response:", result)
-
-          if (result.success) {
-            showToast(result.message)
-            contactForm.reset()
-          } else if (result.errors) {
-            showToast("Please correct the errors in the form.")
-
-            console.log("Form errors:", result.errors)
-          } else {
-            showToast("Something went wrong.")
-
-          }
-        })
-        .catch((error) => {
-          console.error("AJAX error:", error)
-          showToast("Something went wrong.")
-
-        })
-        .finally(() => {
-          submitBtn.textContent = originalText
-          submitBtn.disabled = false
-        })
+    const formData = new FormData(contactForm)
+    const data = {}
+    formData.forEach((value, key) => {
+      data[key] = value
     })
-  }
+
+    fetch("/contact_ajax/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": getCookie("csrftoken"),
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then((result) => {
+        if (result.success) {
+          showToast(result.message, 4000, 'success')
+          contactForm.reset()
+        } else if (result.errors) {
+          showToast("Please correct the errors in the form.", 4000, 'error')
+        } else {
+          showToast("Something went wrong.", 4000, 'error')
+        }
+      })
+      .catch(() => {
+        showToast("Something went wrong.", 4000, 'error')
+      })
+      .finally(() => {
+        submitBtn.textContent = originalText
+        submitBtn.disabled = false
+      })
+  })
 })
 
 // Optional helper if CSRF is enabled
@@ -425,11 +417,29 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   })
 })
-function showToast(message, duration = 4000) {
+function showToast(message, duration = 4000, type = 'success') {
   const toast = document.getElementById("toast");
   const toastMessage = document.getElementById("toast-message");
 
+  if (!toast || !toastMessage) {
+    return;
+  }
+
   toastMessage.textContent = message;
+
+  // Set appropriate styling and icon based on type
+  const toastIcon = document.getElementById("toast-icon");
+  if (type === 'error') {
+    toast.className = "fixed top-6 left-4 z-50 bg-red-600 text-white px-6 py-4 rounded-lg shadow-xl transform transition-all duration-500 ease-in-out -translate-x-full opacity-0 border border-red-400";
+    if (toastIcon) {
+      toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>';
+    }
+  } else {
+    toast.className = "fixed top-6 left-4 z-50 bg-green-600 text-white px-6 py-4 rounded-lg shadow-xl transform transition-all duration-500 ease-in-out -translate-x-full opacity-0 border border-green-400";
+    if (toastIcon) {
+      toastIcon.innerHTML = '<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>';
+    }
+  }
 
   // Reset styles
   toast.classList.remove("hidden", "-translate-x-full", "opacity-0");
@@ -477,21 +487,21 @@ function toggleMobileMenu() {
   const body = document.body;
 
   console.log("Toggle called"); // Debug log
-  
-  if (menu && hamburger) {
-      menu.classList.toggle("active");
-      hamburger.classList.toggle("active");
 
-      // Prevent body scroll when menu is open
-      if (menu.classList.contains("active")) {
-          body.classList.add("menu-open");
-          console.log("Menu opened"); // Debug log
-      } else {
-          body.classList.remove("menu-open");
-          console.log("Menu closed"); // Debug log
-      }
+  if (menu && hamburger) {
+    menu.classList.toggle("active");
+    hamburger.classList.toggle("active");
+
+    // Prevent body scroll when menu is open
+    if (menu.classList.contains("active")) {
+      body.classList.add("menu-open");
+      console.log("Menu opened"); // Debug log
+    } else {
+      body.classList.remove("menu-open");
+      console.log("Menu closed"); // Debug log
+    }
   } else {
-      console.error("Menu or hamburger element not found");
+    console.error("Menu or hamburger element not found");
   }
 }
 
@@ -501,9 +511,9 @@ function closeMobileMenu() {
   const body = document.body;
 
   if (menu && hamburger) {
-      menu.classList.remove("active");
-      hamburger.classList.remove("active");
-      body.classList.remove("menu-open");
+    menu.classList.remove("active");
+    hamburger.classList.remove("active");
+    body.classList.remove("menu-open");
   }
 }
 
@@ -512,45 +522,50 @@ document.addEventListener("click", (event) => {
   const menu = document.getElementById("mobileMenu");
   const hamburger = document.getElementById("hamburger");
 
-  if (menu && hamburger && 
-      !menu.contains(event.target) && 
-      !hamburger.contains(event.target) &&
-      menu.classList.contains("active")) {
-      closeMobileMenu();
+  if (menu && hamburger &&
+    !menu.contains(event.target) &&
+    !hamburger.contains(event.target) &&
+    menu.classList.contains("active")) {
+    closeMobileMenu();
   }
 });
 
 // Close mobile menu with ESC key
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
-      const menu = document.getElementById("mobileMenu");
-      if (menu && menu.classList.contains("active")) {
-          closeMobileMenu();
-      }
+    const menu = document.getElementById("mobileMenu");
+    if (menu && menu.classList.contains("active")) {
+      closeMobileMenu();
+    }
   }
 });
 
 // Enhanced smooth scrolling for anchor links
 document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
-      anchor.addEventListener("click", function (e) {
-          e.preventDefault();
-          const target = document.querySelector(this.getAttribute("href"));
-          if (target) {
-              // Add offset for fixed navigation
-              const offsetTop = target.offsetTop - 80;
-              window.scrollTo({
-                  top: offsetTop,
-                  behavior: "smooth"
-              });
-          }
-      });
+    anchor.addEventListener("click", function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute("href"));
+      if (target) {
+        // Add offset for fixed navigation
+        const offsetTop = target.offsetTop - 80;
+        window.scrollTo({
+          top: offsetTop,
+          behavior: "smooth"
+        });
+      }
+    });
   });
 });
 
 // Close video modal when clicking anywhere outside the modal
-document.getElementById('videoModal').addEventListener('click', function (e) {
-  if (e.target === this) {
-      closeVideoModal();
+document.addEventListener('click', function (event) {
+  const menu = document.getElementById('mobileMenu');
+  const hamburger = document.getElementById('hamburger');
+
+  if (!menu.contains(event.target) && !hamburger.contains(event.target)) {
+    menu.classList.remove('active');
+    hamburger.classList.remove('active');
+    document.body.style.overflow = 'auto';
   }
 });

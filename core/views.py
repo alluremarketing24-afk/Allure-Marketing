@@ -100,7 +100,15 @@ def contact_ajax(request):
         return JsonResponse({'success': False, 'message': 'Invalid request method'}, status=405)
 
     try:
-        data = json.loads(request.body)
+        # Try to parse JSON data first
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            # If JSON parsing fails, try to get data from POST
+            data = request.POST.dict()
+        
+        print("Received data:", data)  # Debug print
+        
         form = ContactForm(data)
 
         if form.is_valid():
@@ -122,9 +130,6 @@ Message: {contact.message or 'No message provided'}
 
 Submitted at: {contact.created_at.strftime('%Y-%m-%d %H:%M:%S')}
 """
-# # Decision Maker: {contact.get_is_decision_maker_display()}
-# Decision Maker Email: {contact.decision_maker_email or 'N/A'}
-# Decision Maker Contact: {contact.decision_maker_contact or 'N/A'}
 
             # Send email via Celery
             try:
@@ -140,10 +145,9 @@ Submitted at: {contact.created_at.strftime('%Y-%m-%d %H:%M:%S')}
 
         else:
             # Form is not valid
+            print("Form errors:", form.errors)  # Debug print
             return JsonResponse({'success': False, 'errors': form.errors})
 
-    except json.JSONDecodeError:
-        return JsonResponse({'success': False, 'message': 'Invalid JSON data'})
     except Exception as e:
         print("Error in contact_ajax:", e)
         return JsonResponse({'success': False, 'message': 'An error occurred. Please try again.'})

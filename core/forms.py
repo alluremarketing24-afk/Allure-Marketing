@@ -4,11 +4,6 @@ from .models import Contact, Video, Service, ServiceIcon
 class ContactForm(forms.ModelForm):
     class Meta:
         model = Contact
-        # fields = [
-        #     'name', 'contact', 'business_name', 'insta_id', 'city', 'service_type',
-        #     'is_decision_maker', 'decision_maker_email', 'decision_maker_contact',
-        #     'email', 'message'
-        # ]
         fields = [
             'name', 'contact', 'business_name', 'insta_id', 'city', 'service_type',
             'email', 'message'
@@ -41,20 +36,6 @@ class ContactForm(forms.ModelForm):
             'service_type': forms.Select(attrs={
                 'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white focus:border-yellow-500/80 focus:outline-none transition-all',
                 'placeholder': 'Service Type *'
-            }),
-            'is_decision_maker': forms.Select(choices=[('yes', 'Yes'), ('no', 'No')], attrs={
-                'id': 'isDecisionMaker',
-                'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white focus:border-yellow-500/80 focus:outline-none transition-all'
-            }),
-            'decision_maker_email': forms.EmailInput(attrs={
-                'id': 'decisionMakerEmail',
-                'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white placeholder-gray-400 focus:border-yellow-500/80 focus:outline-none transition-all',
-                'placeholder': 'Decision Maker Email'
-            }),
-            'decision_maker_contact': forms.TextInput(attrs={
-                'id': 'decisionMakerContact',
-                'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white placeholder-gray-400 focus:border-yellow-500/80 focus:outline-none transition-all',
-                'placeholder': 'Decision Maker Contact'
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white placeholder-gray-400 focus:border-yellow-500/80 focus:outline-none transition-all',
