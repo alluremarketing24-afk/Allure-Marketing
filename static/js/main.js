@@ -547,3 +547,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   });
 });
+
+// Close video modal when clicking anywhere outside the modal
+document.addEventListener('click', function (event) {
+  const menu = document.getElementById('mobileMenu');
+  const hamburger = document.getElementById('hamburger');
+
+  if (!menu.contains(event.target) && !hamburger.contains(event.target)) {
+      menu.classList.remove('active');
+      hamburger.classList.remove('active');
+      document.body.style.overflow = 'auto';
+  }
+});

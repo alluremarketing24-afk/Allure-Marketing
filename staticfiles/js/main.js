@@ -4,21 +4,7 @@
 // Initialize Lucide icons
 lucide.createIcons()
 
-// Fixed Mobile Menu Toggle
-function toggleMobileMenu() {
-  const menu = document.getElementById("mobileMenu");
-  const hamburger = document.getElementById("hamburger");
 
-  menu.classList.toggle("active");
-  hamburger.classList.toggle("active");
-
-  // Prevent body scroll when menu is open
-  if (menu.classList.contains("active")) {
-    document.body.style.overflow = "hidden";
-  } else {
-    document.body.style.overflow = "auto";
-  }
-}
 
 // Enhanced Video Modal Functions with Universal Format Support
 function openVideoModal(el) {
@@ -482,3 +468,89 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
+// REPLACE your existing mobile menu JavaScript with this
+
+// Enhanced Mobile Menu Functions
+function toggleMobileMenu() {
+  const menu = document.getElementById("mobileMenu");
+  const hamburger = document.getElementById("hamburger");
+  const body = document.body;
+
+  console.log("Toggle called"); // Debug log
+  
+  if (menu && hamburger) {
+      menu.classList.toggle("active");
+      hamburger.classList.toggle("active");
+
+      // Prevent body scroll when menu is open
+      if (menu.classList.contains("active")) {
+          body.classList.add("menu-open");
+          console.log("Menu opened"); // Debug log
+      } else {
+          body.classList.remove("menu-open");
+          console.log("Menu closed"); // Debug log
+      }
+  } else {
+      console.error("Menu or hamburger element not found");
+  }
+}
+
+function closeMobileMenu() {
+  const menu = document.getElementById("mobileMenu");
+  const hamburger = document.getElementById("hamburger");
+  const body = document.body;
+
+  if (menu && hamburger) {
+      menu.classList.remove("active");
+      hamburger.classList.remove("active");
+      body.classList.remove("menu-open");
+  }
+}
+
+// Close mobile menu when clicking outside
+document.addEventListener("click", (event) => {
+  const menu = document.getElementById("mobileMenu");
+  const hamburger = document.getElementById("hamburger");
+
+  if (menu && hamburger && 
+      !menu.contains(event.target) && 
+      !hamburger.contains(event.target) &&
+      menu.classList.contains("active")) {
+      closeMobileMenu();
+  }
+});
+
+// Close mobile menu with ESC key
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+      const menu = document.getElementById("mobileMenu");
+      if (menu && menu.classList.contains("active")) {
+          closeMobileMenu();
+      }
+  }
+});
+
+// Enhanced smooth scrolling for anchor links
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+      anchor.addEventListener("click", function (e) {
+          e.preventDefault();
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+              // Add offset for fixed navigation
+              const offsetTop = target.offsetTop - 80;
+              window.scrollTo({
+                  top: offsetTop,
+                  behavior: "smooth"
+              });
+          }
+      });
+  });
+});
+
+// Close video modal when clicking anywhere outside the modal
+document.getElementById('videoModal').addEventListener('click', function (e) {
+  if (e.target === this) {
+      closeVideoModal();
+  }
+});

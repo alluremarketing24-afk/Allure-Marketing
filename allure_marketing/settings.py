@@ -17,7 +17,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-here'
 DEBUG = config('DEBUG', default=True, cast=bool)
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "alluremarketing.in","3.81.52.224","www.alluremarketing.in"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "alluremarketing.in","54.198.101.92","www.alluremarketing.in"]
 
 
 # Application definition
@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'core',
     "debug_toolbar",
+    "storages",
 ]
 
 MIDDLEWARE = [
@@ -77,19 +78,22 @@ WSGI_APPLICATION = 'allure_marketing.wsgi.application'
 
 
 # production
-
-
+import dj_database_url
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT', '5432'),
+        'NAME': os.getenv("DB_NAME", "postgres"),
+        'USER': os.getenv("DB_USER", "postgres"),
+        'PASSWORD': os.getenv("DB_PASSWORD", ""),
+        'HOST': os.getenv("DB_HOST", "localhost"),
+        'PORT': os.getenv("DB_PORT", "5432"),
+        'OPTIONS': {
+            'sslmode': 'require',   # ensures SSL (needed for Supabase/Neon)
+        },
     }
 }
+
 
 
 
@@ -154,6 +158,28 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='orgk jwcy xyub lfkj')
 # DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='jatingerag5@gmail.com')
 ADMIN_EMAIL = config('ADMIN_EMAIL', default='alluremarketing24@gmail.com')
+
+
+
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = os.getenv("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_REGION_NAME = os.getenv("AWS_S3_REGION_NAME", "us-east-1")
+AWS_S3_SIGNATURE_VERSION = os.getenv("AWS_S3_SIGNATURE_VERSION", "s3v4")
+
+# Performance tweaks
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False   # public URLs
+AWS_S3_FILE_OVERWRITE = False
+
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
+
+
+
+
 
 CELERY_BROKER_URL = 'redis://localhost:6379/0'
 

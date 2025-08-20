@@ -5,6 +5,10 @@ import os
 from django.core.files.storage import default_storage
 from django.db import models
 from django.core.validators import FileExtensionValidator
+from django.db import models
+from django.core.validators import FileExtensionValidator
+from storages.backends.s3boto3 import S3Boto3Storage
+s3_storage = S3Boto3Storage()
 
 
 class VideoType(models.Model):
@@ -20,81 +24,59 @@ class VideoType(models.Model):
 
 
 
+
+
 class Video(models.Model):
     video_name = models.CharField(max_length=200)
-    video_type = models.ForeignKey(VideoType, on_delete=models.CASCADE, related_name='videos')
+    video_type = models.ForeignKey("VideoType", on_delete=models.CASCADE, related_name='videos')
     video_description = models.TextField()
 
-    # Old fields (retained)
+    # Upload directly to S3
     video_file = models.FileField(
         upload_to='videos/',
-        validators=[FileExtensionValidator(allowed_extensions=['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'])],
+        storage=s3_storage,
+        validators=[FileExtensionValidator(
+            allowed_extensions=['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv']
+        )],
         blank=True, null=True
     )
-    video_url = models.URLField(blank=True, help_text="External or Supabase video URL")
-    thumbnail = models.ImageField(upload_to='thumbnails/', blank=True, null=True)
+    thumbnail_file = models.ImageField(
+        upload_to='thumbnails/',
+        storage=s3_storage,
+        blank=True, null=True
+    )
 
-    # ✅ Supabase thumbnail URL (new)
-    thumbnail_url = models.URLField(blank=True, help_text="Supabase-hosted thumbnail URL (auto-generated)")
+    # Auto-filled URL fields (saved permanently in DB)
+    video_url = models.URLField(blank=True)
+    thumbnail_url = models.URLField(blank=True)
 
     is_featured = models.BooleanField(default=False)
     video_created_at = models.DateTimeField(auto_now_add=True)
+    order = models.PositiveIntegerField(default=0)
 
-    # ✅ Temp admin-only upload fields (not saved to DB)
-    upload_video = models.FileField(upload_to='temp/', blank=True, null=True)
-    upload_thumbnail = models.ImageField(upload_to='temp/', blank=True, null=True)
+    def save(self, *args, **kwargs):
+        """Ensure URLs always point to S3 links after upload"""
+        if self.video_file:
+            self.video_url = self.video_file.url
+        if self.thumbnail_file:
+            self.thumbnail_url = self.thumbnail_file.url
+        super().save(*args, **kwargs)
 
     def get_video_url(self):
-        """Return the appropriate video URL"""
-        if self.video_url:
-            return self.video_url
-        elif self.video_file:
+        """Return the proper S3 URL with region"""
+        if self.video_file:
             return self.video_file.url
-        return None
+        return self.video_url
 
     def get_thumbnail_url(self):
-        """Return Supabase thumbnail or fallback to local thumbnail"""
-        if self.thumbnail_url:
-            return self.thumbnail_url
-        elif self.thumbnail:
-            return self.thumbnail.url
-        return None
-
-    def get_embed_url(self):
-        """Convert YouTube/Vimeo URLs to embed format"""
-        if not self.video_url:
-            return None
-
-        url = self.video_url
-
-        # YouTube URL conversion
-        if 'youtube.com/watch?v=' in url:
-            video_id = url.split('watch?v=')[1].split('&')[0]
-            return f"https://www.youtube.com/embed/{video_id}?autoplay=1&rel=0"
-        elif 'youtu.be/' in url:
-            video_id = url.split('youtu.be/')[1].split('?')[0]
-            return f"https://www.youtube.com/embed/{video_id}?autoplay=1&rel=0"
-
-        # Vimeo URL conversion
-        elif 'vimeo.com/' in url:
-            video_id = url.split('vimeo.com/')[1].split('?')[0]
-            return f"https://player.vimeo.com/video/{video_id}?autoplay=1"
-
-        return url
-
-    def is_youtube(self):
-        return self.video_url and ('youtube.com' in self.video_url or 'youtu.be' in self.video_url)
-
-    def is_vimeo(self):
-        return self.video_url and 'vimeo.com' in self.video_url
-
-    def is_local_file(self):
-        return bool(self.video_file and not self.video_url)
+        """Return the proper S3 URL with region"""
+        if self.thumbnail_file:
+            return self.thumbnail_file.url
+        return self.thumbnail_url
 
     def __str__(self):
         return self.video_name
-    
-    order = models.PositiveIntegerField(default=0)
+
     class Meta:
         ordering = ['order', '-video_created_at']
 

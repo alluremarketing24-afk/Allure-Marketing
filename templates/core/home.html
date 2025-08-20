@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{% load cache %}
+
 {% block content %}
 <!-- Hidden video element for local thumbnail generation -->
 <video class="video-thumbnail-generator" id="thumbnailGenerator" muted></video>
@@ -94,7 +94,7 @@
 
 </nav>
 
-{% cache 300 hero %}
+
 <!-- Hero Section -->
 <section id="hero" class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
     <div class="absolute inset-0 bg-gradient-to-r from-yellow-600/10 to-yellow-400/10"></div>
@@ -135,10 +135,10 @@
     <div class="absolute top-20 left-4 sm:left-10 w-16 sm:w-20 h-16 sm:h-20 gold-gradient rounded-full opacity-20 floating"></div>
     <div class="absolute bottom-20 right-4 sm:right-10 w-24 sm:w-32 h-24 sm:h-32 gold-gradient rounded-full opacity-20 floating" style="animation-delay: -3s;"></div>
 </section>
-{% endcache %}
+
 
 <!-- Enhanced Services Section -->
-{% cache 300 services %}
+
 <section id="services" class="py-16 sm:py-20 px-4 sm:px-6">
     <div class="max-w-7xl mx-auto">
         <div class="text-center mb-12 sm:mb-16">
@@ -176,66 +176,75 @@
         </div>
     </div>
 </section>
-{% endcache %}
+
 
 <!-- Professional Portfolio Section -->
-{% cache 300 portfolio_section %}
+
 
 <section id="portfolio" class="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-transparent to-gray-900/20">
     <div class="max-w-7xl mx-auto">
 
+        <!-- Title -->
         <div class="text-center mb-12 sm:mb-16">
-            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">Featured Reels & Content</h2>
+            <h2 class="text-3xl sm:text-4xl md:text-5xl font-bold gradient-text mb-4">
+                Featured Reels & Content
+            </h2>
             <p class="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
                 Explore our portfolio of viral reels, social media content, and brand storytelling
             </p>
         </div>
 
         <!-- Category Filter -->
-        {% cache 600 video_types %}   {# cache for 10 minutes #}
         <div class="flex justify-center gap-4 mb-8 flex-wrap">
             {% for video_type in video_types %}
-            <button class="filter-btn px-4 py-2 rounded-full border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 transition-all" 
-                    data-type="{{ video_type.id }}">
+            <button 
+                class="filter-btn px-4 py-2 rounded-full border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/20 transition-all" 
+                data-type="{{ video_type.id }}">
                 {{ video_type.name }}
             </button>
             {% endfor %}
         </div>
-        {% endcache %}
 
         <!-- Portfolio Grid -->
-        {% cache 600 featured_videos %}  {# cache for 10 minutes #}
-        <div class="portfolio-grid" id="video-grid">
-            {% for video in videos %}
-            <div class="reel-container"
-                data-video-src="{{ video.get_video_url }}"
-                onclick="openVideoModal(this)">
-                
-                {% if video.get_thumbnail_url %}
-                    <img src="{{ video.get_thumbnail_url }}" 
-                         alt="{{ video.video_name }}" 
-                         class="reel-thumbnail"
-                         loading="lazy" />   {# ✅ lazy load thumbnails #}
-                {% else %}
-                    <div class="reel-thumbnail bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
-                        <i data-lucide="play-circle" class="w-16 h-16 text-yellow-500"></i>
-                    </div>
-                {% endif %}
-                
-                <div class="reel-overlay">
-                    <div class="reel-play-button"></div>
-                    <div class="mt-auto">
-                        <h3 class="text-lg font-bold text-white mb-2">{{ video.video_name }}</h3>
-                        <p class="text-sm text-gray-300 mb-4">{{ video.video_description|truncatechars:100 }}</p>
-                    </div>
-                </div>
+<!-- Portfolio Grid -->
+<div class="portfolio-grid" id="video-grid">
+    {% for video in videos %}
+    <div class="reel-container"
+         data-video-src="{{ video.get_video_url }}"
+         onclick="openVideoModal(this)">
+        
+        {% if video.get_thumbnail_url %}
+            <img src="{{ video.get_thumbnail_url }}" 
+                 alt="{{ video.video_name }}" 
+                 class="reel-thumbnail"
+                  />
+        {% else %}
+            <div class="reel-thumbnail bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+                <i data-lucide="play-circle" class="w-16 h-16 text-yellow-500"></i>
             </div>
-            {% endfor %}       
+        {% endif %}
+        
+        <div class="reel-overlay">
+            <div class="reel-play-button"></div>
+            <div class="mt-auto">
+                <h3 class="text-lg font-bold text-white mb-2">
+                    {{ video.video_name }}
+                </h3>
+                <p class="text-sm text-gray-300 mb-4">
+                    {{ video.video_description|truncatechars:100 }}
+                </p>
+            </div>
         </div>
-        {% endcache %}
+    </div>
+    {% empty %}
+    <p class="text-center text-gray-400">No featured videos available yet.</p>
+    {% endfor %}
+</div>
+
         
     </div>
 </section>
+
 
 
 <!-- Your Experience, Our Pride Section -->
@@ -598,7 +607,7 @@
     <span id="toast-message" class="font-medium">This is a toast message</span>
   </div>
 
-{% endcache %}
+
 {% endblock %}
 
 

@@ -6,11 +6,8 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from .models import Service, Video, VideoType, Contact, SiteSettings, ServiceIcon
 import datetime
-from .utils.supabase_upload import upload_to_supabase  # You need to create this file as discussed
 from adminsortable2.admin import SortableAdminMixin
-from django.utils.text import slugify
-import os
-from django.core.files.uploadedfile import UploadedFile
+
 
 class AllureMarketingAdminSite(AdminSite):
     site_header = "Allure Marketing Admin"
@@ -76,6 +73,7 @@ class AllureMarketingAdminSite(AdminSite):
         wb.save(response)
         return response
 
+
 # Create custom admin site instance
 admin_site = AllureMarketingAdminSite(name='allure_admin')
 
@@ -114,61 +112,31 @@ class VideoTypeAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
-
 @admin.register(Video, site=admin_site)
 class VideoAdmin(admin.ModelAdmin):
-    list_display = ['video_name', 'video_type', 'is_featured','order', 'video_created_at']
+    list_display = ['video_name', 'video_type', 'is_featured', 'order', 'video_created_at']
     list_filter = ['video_type', 'is_featured', 'video_created_at']
     search_fields = ['video_name', 'video_description']
-    list_editable = ['is_featured','order']
+    list_editable = ['is_featured', 'order']
     ordering = ['-video_created_at']
     readonly_fields = ['video_url', 'thumbnail_url']
 
     fields = [
         'video_name', 'video_type', 'video_description',
-        'upload_video', 'upload_thumbnail',
-        'video_url', 'thumbnail_url', 'is_featured'
+        'video_file', 'thumbnail_file',   # ✅ S3 upload fields
+        'video_url', 'thumbnail_url',
+        'is_featured', 'order'
     ]
 
     def save_model(self, request, obj, form, change):
-    # --- VIDEO FILE ---
-        file_obj = form.cleaned_data.get("upload_video")
-        if isinstance(file_obj, UploadedFile):  # <- only when a NEW file is uploaded
-            base, ext = os.path.splitext(file_obj.name)
-            desired = f"{slugify(obj.video_name or base)}{ext}"
-            obj.video_url = upload_to_supabase(
-                bucket_name="media.allure",
-                file_obj=file_obj,
-                target_path=f"videos/{desired}"
-                # duplicate handling happens inside your helper now
-            )
-
-            # delete the temporary upload from disk
-            try:
-                obj.upload_video.delete(save=False)
-            except Exception:
-                pass
-
-        # --- THUMBNAIL FILE ---
-        thumb_obj = form.cleaned_data.get("upload_thumbnail")
-        if isinstance(thumb_obj, UploadedFile):  # <- only when a NEW file is uploaded
-            base, ext = os.path.splitext(thumb_obj.name)
-            desired = f"{slugify(obj.video_name or base)}{ext}"
-            obj.thumbnail_url = upload_to_supabase(
-                bucket_name="media.allure",
-                file_obj=thumb_obj,
-                target_path=f"thumbnails/{desired}"
-            )
-
-            try:
-                obj.upload_thumbnail.delete(save=False)
-            except Exception:
-                pass
-
+        """
+        Ensure S3 URLs are saved after upload.
+        """
+        if obj.video_file:
+            obj.video_url = obj.video_file.url
+        if obj.thumbnail_file:
+            obj.thumbnail_url = obj.thumbnail_file.url
         super().save_model(request, obj, form, change)
-
-
-
 
 
 @admin.register(Contact, site=admin_site)
@@ -248,6 +216,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
 
 # Register custom admin site
 admin.site = admin_site

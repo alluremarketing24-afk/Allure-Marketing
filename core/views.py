@@ -23,9 +23,22 @@ from django.core.cache import cache
 from .models import Video, Service, VideoType, SiteSettings
 from .forms import ContactForm
 
-from django.core.cache import cache
-from .models import Video, Service, VideoType, SiteSettings
-from .forms import ContactForm
+import os, re, uuid
+
+def safe_s3_key(folder, filename):
+    """Generate a safe, unique S3 key for uploaded files."""
+    # Get extension
+    _, ext = os.path.splitext(filename)
+    ext = ext.lower()
+
+    # Clean base name (remove spaces, special chars)
+    base = re.sub(r'[^a-zA-Z0-9_-]', '_', os.path.splitext(filename)[0]).lower()
+
+    # Append unique ID to avoid collisions
+    unique_name = f"{base}_{uuid.uuid4().hex}{ext}"
+
+    return f"{folder}/{unique_name}"
+
 
 def home(request):
     """Optimized Home page view with caching & fewer DB hits"""
@@ -34,28 +47,35 @@ def home(request):
     site_settings = cache.get("site_settings")
     if site_settings is None:
         site_settings = SiteSettings.objects.first()
-        cache.set("site_settings", site_settings, 60 * 5)  # 5 min cache
+        cache.set("site_settings", site_settings, 0)
 
     # ✅ Cache featured videos (since usually static)
     videos = cache.get("featured_videos")
     if videos is None:
         videos = (
             Video.objects.filter(is_featured=True)
-            .select_related("video_type")  # avoids extra query if you show video_type
+            .select_related("video_type")
             .order_by("order", "-video_created_at")[:6]
         )
-        cache.set("featured_videos", list(videos), 60 * 5)  # cast to list for caching
 
-    # ✅ Cache video types (small table, still saves a query per request)
+        # ✅ Patch attributes so template doesn't break
+        for v in videos:
+            v.get_video_url = v.get_video_url()
+            v.get_thumbnail_url = v.get_thumbnail_url()
+
+        videos = list(videos)
+        cache.set("featured_videos", videos, 0)
+
+    # ✅ Cache video types
     video_types = cache.get("video_types")
     if video_types is None:
         video_types = list(VideoType.objects.all())
-        cache.set("video_types", video_types, 60 * 5)
+        cache.set("video_types", video_types, 0)
 
-    # ✅ Services (dynamic, but we optimize query with select_related)
+    # ✅ Services
     services = (
         Service.objects.filter(is_active=True)
-        .select_related("icon")  # avoids N+1 queries for icons
+        .select_related("icon")
         .order_by("order", "name")
     )
 
@@ -84,21 +104,6 @@ def contact_ajax(request):
         form = ContactForm(data)
 
         if form.is_valid():
-            # Server-side validation for decision maker fields
-            # is_dm = form.cleaned_data.get('is_decision_maker')
-            # email = form.cleaned_data.get('decision_maker_email')
-            # phone = form.cleaned_data.get('decision_maker_contact')
-
-            # if is_dm == 'no' and (not email or not phone):
-            #     return JsonResponse({
-            #         'success': False,
-            #         'errors': {
-            #             'decision_maker_email': ['Required when not a decision maker.'],
-            #             'decision_maker_contact': ['Required when not a decision maker.']
-            #         }
-            #     })
-
-            # Save form
             contact = form.save()
 
             # Build email content
@@ -155,7 +160,7 @@ def video_detail(request, pk):
         'is_youtube': video.is_youtube(),
         'is_vimeo': video.is_vimeo(),
         'is_local_file': video.is_local_file(),
-        'thumbnail': video.thumbnail.url if video.thumbnail else None,
+        'thumbnail': video.thumbnail_file.url if video.thumbnail_file else video.thumbnail_url,
     })
 
 def get_videos_by_type(request, type_id):
@@ -166,8 +171,8 @@ def get_videos_by_type(request, type_id):
             'id': video.id,
             'video_name': video.video_name,
             'video_description': video.video_description,
-            'thumbnail': video.thumbnail.url if video.thumbnail else None,
-            'video_url': video.get_video_url(),
+            'thumbnail': video.thumbnail_file.url if video.thumbnail_file else video.thumbnail_url,
+            'video_url': video.video_file.url if video.video_file else video.video_url,
         })
     return JsonResponse({'videos': video_data})
 
@@ -264,6 +269,56 @@ def export_contacts_excel(request):
     response['Content-Disposition'] = f'attachment; filename=contacts_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
     wb.save(response)
     return response
+
+
+import boto3
+from django.conf import settings
+from django.views.decorators.http import require_GET
+
+@require_GET
+@login_required
+def generate_presigned_url(request):
+    """Generate presigned URL for direct S3 upload (video or thumbnail)"""
+    file_name = request.GET.get("file_name")
+    file_type = request.GET.get("file_type", "video/mp4")
+    folder = request.GET.get("folder", "videos")   # default to videos, but can be 'thumbnails'
+
+    if not file_name:
+        return JsonResponse({"error": "Missing file_name"}, status=400)
+
+    s3 = boto3.client(
+        "s3",
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+        region_name=settings.AWS_S3_REGION_NAME
+    )
+
+    # ✅ Sanitize & normalize filename before upload
+    key = safe_s3_key(folder, file_name)
+
+    # Presigned PUT URL for upload
+    presigned_url = s3.generate_presigned_url(
+        "put_object",
+        Params={
+            "Bucket": settings.AWS_STORAGE_BUCKET_NAME,
+            "Key": key,
+            "ContentType": file_type,
+        },
+        ExpiresIn=3600
+    )
+
+    # ✅ Region-specific permanent file URL
+    file_url = (
+        f"https://{settings.AWS_STORAGE_BUCKET_NAME}.s3."
+        f"{settings.AWS_S3_REGION_NAME}.amazonaws.com/{key}"
+    )
+
+    return JsonResponse({
+        "upload_url": presigned_url,  # frontend uses this to upload
+        "file_url": file_url          # save this in DB
+    })
+
+
 
 
 from django.shortcuts import render

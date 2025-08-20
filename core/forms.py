@@ -83,15 +83,27 @@ class ContactForm(forms.ModelForm):
         if 'service_type' in self.fields:
             self.fields['service_type'].empty_label = "-- Select Service --"
 
-
 class VideoForm(forms.ModelForm):
     class Meta:
         model = Video
-        fields = ['video_name', 'video_type', 'video_description', 'video_file', 'video_url', 'thumbnail', 'is_featured']
+        fields = [
+            'video_name',
+            'video_type',
+            'video_description',
+            'video_file',
+            'video_url',
+            'thumbnail_file',   # ✅ updated
+            'thumbnail_url',    # ✅ include if you want manual URL input
+            'is_featured',
+            'order'
+        ]
         widgets = {
             'video_description': forms.Textarea(attrs={'rows': 4}),
         }
         help_texts = {
             'video_file': 'Upload a video file OR provide a video URL below',
             'video_url': 'External video URL (YouTube, Vimeo, etc.) OR leave blank if uploading file',
+            'thumbnail_file': 'Upload a thumbnail image (stored in S3)',
+            'thumbnail_url': 'Or paste an external thumbnail URL (optional)',
         }
+
