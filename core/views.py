@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse, HttpResponse
+from django.http import QueryDict
 from django.contrib import messages
-from .tasks import send_contact_email
+# from .tasks import send_contact_email  # Email sending disabled
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -15,15 +16,16 @@ from datetime import datetime
 from django.views.decorators.http import require_http_methods  # ✅ Add this
 
 
-from django.core.mail import EmailMultiAlternatives
-from django.template.loader import render_to_string
-from django.utils.timezone import now
+# from django.core.mail import EmailMultiAlternatives  # Unused after disabling email
+# from django.template.loader import render_to_string  # Unused after disabling email
+# from django.utils.timezone import now  # Unused here
 
 from django.core.cache import cache
 from .models import Video, Service, VideoType, SiteSettings
 from .forms import ContactForm
 
 import os, re, uuid
+from django.core.paginator import Paginator
 
 def safe_s3_key(folder, filename):
     """Generate a safe, unique S3 key for uploaded files."""
@@ -109,13 +111,28 @@ def contact_ajax(request):
         
         print("Received data:", data)  # Debug print
         
-        form = ContactForm(data)
+        # Prepare a QueryDict to properly handle multi-value fields like services
+        qd = QueryDict('', mutable=True)
+        for key, value in data.items():
+            if key == 'services':
+                if isinstance(value, list):
+                    qd.setlist('services', [str(v) for v in value])
+                elif isinstance(value, str):
+                    if ',' in value:
+                        qd.setlist('services', [s for s in [x.strip() for x in value.split(',')] if s])
+                    elif value:
+                        qd.setlist('services', [value])
+            elif value is not None:
+                qd[key] = str(value)
+
+        form = ContactForm(qd)
 
         if form.is_valid():
             contact = form.save()
 
             # Build email content
             subject = f'New Contact Form Submission - {contact.name}'
+            selected_services = ', '.join(contact.services.values_list('name', flat=True)) or 'Not provided'
             message = f"""
 New contact form submission received:
 
@@ -125,18 +142,13 @@ Phone: {contact.contact}
 Business Name: {contact.business_name or 'Not provided'}
 Instagram ID: {contact.insta_id or 'Not provided'}
 City: {contact.city or 'Not provided'}
-Service Type: {contact.service_type}
+Service(s): {selected_services}
 Message: {contact.message or 'No message provided'}
 
 Submitted at: {contact.created_at.strftime('%Y-%m-%d %H:%M:%S')}
 """
 
-            # Send email via Celery
-            try:
-                print("Submitting task to Celery...")
-                send_contact_email.delay(subject, message, [settings.ADMIN_EMAIL])
-            except Exception as e:
-                print(f"Email sending failed: {e}")
+            # Email sending disabled: details are stored in admin only
 
             return JsonResponse({
                 'success': True,
@@ -205,9 +217,51 @@ def custom_admin_videos(request):
 
 @staff_member_required
 def custom_admin_contacts(request):
-    contacts = Contact.objects.all().order_by('-created_at')
+    """Contact management list with search, filters and pagination"""
+    contacts_qs = Contact.objects.prefetch_related('services').all().order_by('-created_at')
+
+    # Filters
+    q = request.GET.get('q', '').strip()
+    contacted = request.GET.get('contacted', '').strip()  # '', 'yes', 'no'
+    service_id = request.GET.get('service', '').strip()
+
+    if q:
+        from django.db.models import Q
+        contacts_qs = contacts_qs.filter(
+            Q(name__icontains=q) |
+            Q(email__icontains=q) |
+            Q(contact__icontains=q) |
+            Q(business_name__icontains=q) |
+            Q(insta_id__icontains=q) |
+            Q(city__icontains=q) |
+            Q(message__icontains=q)
+        )
+
+    if contacted == 'yes':
+        contacts_qs = contacts_qs.filter(is_contacted=True)
+    elif contacted == 'no':
+        contacts_qs = contacts_qs.filter(is_contacted=False)
+
+    if service_id.isdigit():
+        contacts_qs = contacts_qs.filter(services__id=int(service_id))
+
+    # Pagination
+    paginator = Paginator(contacts_qs, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    services = Service.objects.order_by('name')
+
     context = {
-        'contacts': contacts,
+        'contacts': page_obj.object_list,
+        'page_obj': page_obj,
+        'paginator': paginator,
+        'services': services,
+        'q': q,
+        'selected_service': service_id,
+        'selected_contacted': contacted,
+        'total_contacts': Contact.objects.count(),
+        'filtered_count': contacts_qs.count(),
     }
     return render(request, 'admin/contacts.html', context)
 
@@ -229,7 +283,7 @@ def export_contacts_excel(request):
 
     headers = [
         'Name', 'Email', 'Contact', 'Business Name', 'Instagram ID',
-        'Service Type', 'City', 'Message', 'Submitted Date', 'Contacted', 'Notes'
+        'Services', 'City', 'Message', 'Submitted Date', 'Contacted', 'Notes'
     ]
 
     header_font = Font(bold=True, color="FFFFFF")
@@ -249,7 +303,7 @@ def export_contacts_excel(request):
         ws.cell(row=row, column=3,  value=contact.contact)
         ws.cell(row=row, column=4,  value=contact.business_name)
         ws.cell(row=row, column=5,  value=contact.insta_id)
-        ws.cell(row=row, column=6,  value=str(contact.service_type) if contact.service_type else '')
+        ws.cell(row=row, column=6,  value=", ".join(contact.services.values_list('name', flat=True)))
         ws.cell(row=row, column=7,  value=contact.city)
         ws.cell(row=row, column=8,  value=contact.message)
         ws.cell(row=row, column=9,  value=contact.created_at.strftime('%Y-%m-%d %H:%M'))

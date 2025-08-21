@@ -451,7 +451,33 @@
                 
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>{{ form.city }}</div>
-                        <div>{{ form.service_type }}</div>
+                        <div>
+                            <label class="block text-sm mb-2">Choose Services</label>
+                            <div class="relative" id="services-multiselect">
+                                <button type="button" id="servicesMenuButton" class="text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 w-full flex items-center justify-between dark:bg--100 dark:hover:bg-gray-600-700 dark:focus:ring-gray-700">
+                                    <span id="servicesMenuLabel">Select services</span>
+                                    <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
+                                    </svg>
+                                </button>
+                                <div id="servicesMenuPanel" class="z-50 hidden w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 dark:divide-gray-600 absolute top-full left-0 mt-2">
+                                    <ul class="p-3 space-y-3 text-sm text-gray-700 dark:text-gray-200 max-h-64 overflow-y-auto" aria-labelledby="servicesMenuButton">
+                                        {% for cb in form.services %}
+                                        <li>
+                                            <label class="flex items-center cursor-pointer">
+                                                {{ cb.tag }}
+                                                <span class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ cb.choice_label }}</span>
+                                            </label>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="text-gray-500 mt-4">
+                                <span id="selected-services">No services selected.</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mt-2">Select one or more options</p>
+                        </div>
                     </div>
                     <div>{{ form.email }}</div>
                 
@@ -602,7 +628,78 @@
         <span id="toast-message" class="font-medium">This is a toast message</span>
     </div>
 </div>
+<script>
+    // Event listener for the service checkboxes
+    document.addEventListener('DOMContentLoaded', function () {
+        const serviceCheckboxes = document.querySelectorAll('input[name="services"]');
 
+        function computeAndUpdate() {
+            const selectedNames = Array.from(serviceCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => {
+                    const label = cb.closest('label');
+                    const span = label ? label.querySelector('span') : null;
+                    return span ? span.textContent.trim() : cb.value;
+                });
+            updateSelectedServicesUI(selectedNames);
+        }
+
+        serviceCheckboxes.forEach(function (checkbox) {
+            checkbox.addEventListener('change', function (e) {
+                const label = checkbox.closest('label');
+                const span = label ? label.querySelector('span') : null;
+                const name = span ? span.textContent.trim() : checkbox.value;
+                const id = checkbox.value;
+                const state = e.target.checked ? 'selected' : 'deselected';
+                console.log(`Service ${state}: ${name} (id: ${id})`);
+                computeAndUpdate();
+            });
+            checkbox.addEventListener('input', computeAndUpdate);
+        });
+
+        // Initialize on load
+        computeAndUpdate();
+    });
+
+    // Function to update the UI based on selected services
+    function updateSelectedServicesUI(selectedServiceNames) {
+        const selectedServicesContainer = document.getElementById('selected-services');
+        if (selectedServiceNames.length > 0) {
+            selectedServicesContainer.textContent = 'Selected Services: ' + selectedServiceNames.join(', ');
+        } else {
+            selectedServicesContainer.textContent = 'No services selected.';
+        }
+    }
+</script>
+<script>
+// Inline dropdown toggle to ensure it works even if external JS is cached
+document.addEventListener('DOMContentLoaded', function () {
+    const btn = document.getElementById('servicesMenuButton');
+    const panel = document.getElementById('servicesMenuPanel');
+    const wrapper = document.getElementById('services-multiselect');
+    if (!btn || !panel || !wrapper) return;
+
+    btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const isHidden = panel.classList.contains('hidden');
+        console.log('Services dropdown toggle clicked. Opening:', isHidden);
+        panel.classList.toggle('hidden');
+    });
+
+    panel.addEventListener('click', function (e) { e.stopPropagation(); });
+
+    document.addEventListener('click', function (e) {
+        if (!wrapper.contains(e.target)) {
+            if (!panel.classList.contains('hidden')) {
+                panel.classList.add('hidden');
+                console.log('Services dropdown closed by outside click');
+            }
+        }
+    });
+});
+</script>
+    
 
 {% endblock %}
 

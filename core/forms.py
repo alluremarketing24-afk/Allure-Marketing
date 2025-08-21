@@ -5,7 +5,7 @@ class ContactForm(forms.ModelForm):
     class Meta:
         model = Contact
         fields = [
-            'name', 'contact', 'business_name', 'insta_id', 'city', 'service_type',
+            'name', 'contact', 'business_name', 'insta_id', 'city', 'services',
             'email', 'message'
         ]
         widgets = {
@@ -33,9 +33,8 @@ class ContactForm(forms.ModelForm):
                 'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white placeholder-gray-400 focus:border-yellow-500/80 focus:outline-none transition-all',
                 'placeholder': 'City *'
             }),
-            'service_type': forms.Select(attrs={
-                'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white focus:border-yellow-500/80 focus:outline-none transition-all',
-                'placeholder': 'Service Type *'
+            'services': forms.CheckboxSelectMultiple(attrs={
+                'class': 'grid grid-cols-1 sm:grid-cols-2 gap-2 text-white',
             }),
             'email': forms.EmailInput(attrs={
                 'class': 'w-full px-4 py-3 rounded-lg bg-white/5 border border-yellow-500/30 text-white placeholder-gray-400 focus:border-yellow-500/80 focus:outline-none transition-all',
@@ -60,9 +59,9 @@ class ContactForm(forms.ModelForm):
         return contact
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # For dropdowns like Service Type
-        if 'service_type' in self.fields:
-            self.fields['service_type'].empty_label = "-- Select Service --"
+        # Optional: order services alphabetically
+        if 'services' in self.fields:
+            self.fields['services'].queryset = Service.objects.filter(is_active=True).order_by('name')
 
 class VideoForm(forms.ModelForm):
     class Meta:

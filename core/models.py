@@ -175,13 +175,11 @@ class Contact(models.Model):
     #     verbose_name="Decision Maker Contact",
     #     help_text="Required if you're not the decision maker"
     # )
-    service_type = models.ForeignKey(
-    Service,
-    on_delete=models.SET_NULL,
-    null=True,
-    blank=True,
-    related_name='contacts'
-)
+    services = models.ManyToManyField(
+        Service,
+        blank=True,
+        related_name='contacts'
+    )
     email = models.EmailField()
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

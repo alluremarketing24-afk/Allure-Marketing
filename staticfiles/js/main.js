@@ -319,9 +319,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const formData = new FormData(contactForm)
     const data = {}
+    const services = []
     formData.forEach((value, key) => {
-      data[key] = value
+      if (key === 'services') {
+        services.push(value)
+      } else {
+        data[key] = value
+      }
     })
+    if (services.length) {
+      data['services'] = services
+    }
 
     fetch("/contact_ajax/", {
       method: "POST",
@@ -352,6 +360,48 @@ document.addEventListener("DOMContentLoaded", () => {
   })
 })
 
+// Services multiselect dropdown toggle and label update (id-based)
+document.addEventListener("DOMContentLoaded", () => {
+  const btn = document.getElementById('servicesMenuButton')
+  const panel = document.getElementById('servicesMenuPanel')
+  const label = document.getElementById('servicesMenuLabel')
+  if (!btn || !panel || !label) return
+
+  function updateLabel() {
+    const checked = document.querySelectorAll('input[name="services"]:checked')
+    if (checked.length === 0) label.textContent = 'Select services'
+    else if (checked.length === 1) {
+      const lab = checked[0].closest('label')
+      const span = lab ? lab.querySelector('span') : null
+      label.textContent = span ? span.textContent.trim() : '1 service selected'
+    } else label.textContent = `${checked.length} services selected`
+  }
+
+  btn.addEventListener('click', (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    panel.classList.toggle('hidden')
+  })
+
+  panel.addEventListener('click', (e) => {
+    e.stopPropagation()
+  })
+
+  document.addEventListener('click', (e) => {
+    const wrapper = document.getElementById('services-multiselect')
+    if (wrapper && !wrapper.contains(e.target)) {
+      panel.classList.add('hidden')
+    }
+  })
+
+  document.addEventListener('change', (e) => {
+    if (e.target && e.target.matches('input[name="services"]')) {
+      updateLabel()
+    }
+  })
+
+  updateLabel()
+})
 // Optional helper if CSRF is enabled
 function getCookie(name) {
   let cookieValue = null

@@ -141,8 +141,8 @@ class VideoAdmin(admin.ModelAdmin):
 
 @admin.register(Contact, site=admin_site)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ['name', 'email', 'contact', 'business_name', 'service_type', 'is_contacted', 'created_at']
-    list_filter = ['service_type', 'is_contacted', 'created_at', 'city']
+    list_display = ['name', 'email', 'contact', 'business_name', 'display_services', 'is_contacted', 'created_at']
+    list_filter = ['is_contacted', 'created_at', 'city', 'services']
     search_fields = ['name', 'email', 'business_name', 'contact']
     list_editable = ['is_contacted']
     ordering = ['-created_at']
@@ -165,7 +165,7 @@ class ContactAdmin(admin.ModelAdmin):
 
         headers = [
             'Name', 'Contact', 'Business Name', 'Instagram ID', 'City',
-            'service_type', 'Email', 'Message', 'Created At', 'Contacted', 'Notes'
+            'Services', 'Email', 'Message', 'Created At', 'Contacted', 'Notes'
         ]
 
         for col, header in enumerate(headers, 1):
@@ -177,7 +177,7 @@ class ContactAdmin(admin.ModelAdmin):
             ws.cell(row=row, column=3, value=contact.business_name)
             ws.cell(row=row, column=4, value=contact.insta_id)
             ws.cell(row=row, column=5, value=contact.city)
-            ws.cell(row=row, column=6, value=contact.get_is_decision_maker_display())
+            ws.cell(row=row, column=6, value=", ".join(contact.services.values_list('name', flat=True)))
             ws.cell(row=row, column=7, value=contact.email)
             ws.cell(row=row, column=8, value=contact.message)
             ws.cell(row=row, column=9, value=contact.created_at.strftime('%Y-%m-%d %H:%M:%S'))
@@ -191,6 +191,10 @@ class ContactAdmin(admin.ModelAdmin):
 
         wb.save(response)
         return response
+
+    def display_services(self, obj):
+        return ", ".join(obj.services.values_list('name', flat=True))
+    display_services.short_description = 'Services'
     export_selected_contacts.short_description = "Export selected contacts to Excel"
 
 

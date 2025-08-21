@@ -47,59 +47,124 @@
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Filters -->
+        <form method="get" class="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+            <input type="text" name="q" value="{{ q }}" placeholder="Search name, email, phone..." class="w-full px-3 py-2 rounded-lg bg-white/5 border border-yellow-500/30 text-white placeholder-gray-400 focus:border-yellow-500/70 focus:outline-none" />
+            <select name="service" class="w-full px-3 py-2 rounded-lg bg-white/5 border border-yellow-500/30 text-white focus:border-yellow-500/70 focus:outline-none">
+                <option value="">All Services</option>
+                {% for s in services %}
+                    <option value="{{ s.id }}" {% if selected_service == s.id|stringformat:"s" %}selected{% endif %}>{{ s.name }}</option>
+                {% endfor %}
+            </select>
+            <select name="contacted" class="w-full px-3 py-2 rounded-lg bg-white/5 border border-yellow-500/30 text-white focus:border-yellow-500/70 focus:outline-none">
+                <option value="">All Status</option>
+                <option value="yes" {% if selected_contacted == 'yes' %}selected{% endif %}>Contacted</option>
+                <option value="no" {% if selected_contacted == 'no' %}selected{% endif %}>New Lead</option>
+            </select>
+            <div class="flex gap-3">
+                <button class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors">Apply</button>
+                <a href="?" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">Reset</a>
+            </div>
+            <div class="sm:col-span-2 lg:col-span-2 flex items-center justify-end text-sm text-gray-400">Showing {{ filtered_count }} of {{ total_contacts }}</div>
+        </form>
+
         <div class="glass-effect rounded-xl overflow-hidden">
-            <div class="overflow-x-auto">
+            <div class="hidden md:block overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-yellow-500/10">
                         <tr>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Contact Info</th>
-                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Business Details</th>
-                            {% comment %} <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Decision Maker</th> {% endcomment %}
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Contact</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Business</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Services</th>
+                            <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Message</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Date</th>
                             <th class="px-6 py-4 text-left text-xs font-medium text-yellow-400 uppercase tracking-wider">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-700">
                         {% for contact in contacts %}
-                        <tr class="hover:bg-white/5 transition-colors">
+                        <tr class="hover:bg-white/5 transition-colors align-top">
                             <td class="px-6 py-4">
-                                <div>
-                                    <div class="text-sm font-medium text-white">{{ contact.name }}</div>
-                                    <div class="text-sm text-gray-400">{{ contact.email }}</div>
-                                    <div class="text-sm text-gray-400">{{ contact.contact }}</div>
-                                </div>
+                                <div class="text-sm font-medium text-white">{{ contact.name }}</div>
+                                <div class="text-xs text-gray-400">{{ contact.email }} · {{ contact.contact }}</div>
+                                <div class="text-xs text-gray-400">City: {{ contact.city|default:"-" }} · IG: @{{ contact.insta_id|default:"-" }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="text-sm text-white">{{ contact.business_name|default:"-" }}</div>
-                                <div class="text-sm text-gray-400">{{ contact.city|default:"-" }}</div>
-                                <div class="text-sm text-gray-400">@{{ contact.insta_id|default:"-" }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-400">
-                                {{ contact.created_at|date:"M d, Y H:i" }}
+                            <td class="px-6 py-4 text-sm text-gray-300">
+                                {% with service_list=contact.services.all %}
+                                    {% if service_list %}
+                                        {% for s in service_list %}{% if not forloop.first %}, {% endif %}{{ s.name }}{% endfor %}
+                                    {% else %}-{% endif %}
+                                {% endwith %}
                             </td>
+                            <td class="px-6 py-4 text-sm text-gray-300 max-w-md">
+                                {{ contact.message|default:"-" }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-400 whitespace-nowrap">{{ contact.created_at|date:"M d, Y H:i" }}</td>
                             <td class="px-6 py-4">
                                 {% if contact.is_contacted %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
-                                        Contacted
-                                    </span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">Contacted</span>
                                 {% else %}
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
-                                        New Lead
-                                    </span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">New Lead</span>
                                 {% endif %}
                             </td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="px-6 py-8 text-center text-gray-400">
-                                No contacts found.
-                            </td>
+                            <td colspan="6" class="px-6 py-8 text-center text-gray-400">No contacts found.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden divide-y divide-gray-800">
+                {% for contact in contacts %}
+                <div class="p-4">
+                    <div class="flex items-start justify-between">
+                        <div>
+                            <div class="text-base font-semibold text-white">{{ contact.name }}</div>
+                            <div class="text-xs text-gray-400">{{ contact.email }} · {{ contact.contact }}</div>
+                        </div>
+                        <div>
+                            {% if contact.is_contacted %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">Contacted</span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">New Lead</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-300">
+                        <div>Business: {{ contact.business_name|default:"-" }}</div>
+                        <div>Services: {% with service_list=contact.services.all %}{% if service_list %}{% for s in service_list %}{% if not forloop.first %}, {% endif %}{{ s.name }}{% endfor %}{% else %}-{% endif %}{% endwith %}</div>
+                        <div>City: {{ contact.city|default:"-" }} · IG: @{{ contact.insta_id|default:"-" }}</div>
+                        <div class="mt-2 text-gray-300">{{ contact.message|default:"-" }}</div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500">{{ contact.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+                {% empty %}
+                <div class="p-6 text-center text-gray-400">No contacts found.</div>
+                {% endfor %}
+            </div>
         </div>
+
+        <!-- Pagination -->
+        {% if page_obj and page_obj.paginator.num_pages > 1 %}
+        <div class="mt-6 flex items-center justify-between text-sm">
+            <div class="text-gray-400">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</div>
+            <div class="flex items-center gap-2">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}&q={{ q }}&service={{ selected_service }}&contacted={{ selected_contacted }}" class="px-3 py-1 rounded-md bg-white/5 border border-yellow-500/20 text-white hover:bg-white/10">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&q={{ q }}&service={{ selected_service }}&contacted={{ selected_contacted }}" class="px-3 py-1 rounded-md bg-white/5 border border-yellow-500/20 text-white hover:bg-white/10">Next</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <script>
