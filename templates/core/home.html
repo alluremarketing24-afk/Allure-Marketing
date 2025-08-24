@@ -452,31 +452,46 @@
                     <div class="grid sm:grid-cols-2 gap-4">
                         <div>{{ form.city }}</div>
                         <div>
-                            <label class="block text-sm mb-2">Choose Services</label>
                             <div class="relative" id="services-multiselect">
-                                <button type="button" id="servicesMenuButton" class="text-white focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 w-full flex items-center justify-between dark:bg--100 dark:hover:bg-gray-600-700 dark:focus:ring-gray-700">
+                                <button 
+                                    type="button" 
+                                    id="servicesMenuButton"
+                                    class="w-full bg-gray-800 border border-gray-700 text-gray-200 rounded-lg px-4 py-3 text-left focus:ring-2 focus:ring-blue-500 focus:outline-none flex items-center justify-between"
+                                >
                                     <span id="servicesMenuLabel">Select services</span>
-                                    <svg class="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
+                                    <svg class="w-4 h-4 ml-2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
                                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4"/>
                                     </svg>
                                 </button>
-                                <div id="servicesMenuPanel" class="z-50 hidden w-full bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-700 dark:divide-gray-600 absolute top-full left-0 mt-2">
-                                    <ul class="p-3 space-y-3 text-sm text-gray-700 dark:text-gray-200 max-h-64 overflow-y-auto" aria-labelledby="servicesMenuButton">
-                                        {% for cb in form.services %}
+                            
+                                <div id="servicesMenuPanel" 
+                                    class="z-50 hidden w-full bg-black border border-gray-700 rounded-lg shadow-lg mt-2 max-h-64 overflow-y-auto"
+                                >
+                                    <ul class="p-3 space-y-2 text-sm text-gray-200 services-list">
+                                        {% for s in services %}
                                         <li>
-                                            <label class="flex items-center cursor-pointer">
-                                                {{ cb.tag }}
-                                                <span class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ cb.choice_label }}</span>
+                                            <label class="flex items-center cursor-pointer ">
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="services" 
+                                                    value="{{ s.id }}" 
+                                                    class="w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-2 focus:ring-blue-500"
+                                                >
+                                                <span class="ml-2">{{ s.name }}</span>
                                             </label>
                                         </li>
                                         {% endfor %}
                                     </ul>
                                 </div>
+                            
+                                <!-- Selected services preview + hint -->
+                                <div class="text-gray-500 mt-3">
+                                    {% comment %} <span id="selected-services">No services selected.</span> {% endcomment %}
+                                </div>
+                                <p class="text-xs text-gray-400 mt-1">Select one or more options</p>
                             </div>
-                            <div class="text-gray-500 mt-4">
-                                <span id="selected-services">No services selected.</span>
-                            </div>
-                            <p class="text-xs text-gray-400 mt-2">Select one or more options</p>
+                            
+                            
                         </div>
                     </div>
                     <div>{{ form.email }}</div>
@@ -628,7 +643,7 @@
         <span id="toast-message" class="font-medium">This is a toast message</span>
     </div>
 </div>
-<script>
+{% comment %} <script>
     // Event listener for the service checkboxes
     document.addEventListener('DOMContentLoaded', function () {
         const serviceCheckboxes = document.querySelectorAll('input[name="services"]');
@@ -670,7 +685,8 @@
             selectedServicesContainer.textContent = 'No services selected.';
         }
     }
-</script>
+</script> {% endcomment %}
+
 <script>
 // Inline dropdown toggle to ensure it works even if external JS is cached
 document.addEventListener('DOMContentLoaded', function () {

@@ -128,7 +128,9 @@ def contact_ajax(request):
         form = ContactForm(qd)
 
         if form.is_valid():
-            contact = form.save()
+            contact = form.save(commit=False)  # don't save M2M yet
+            contact.save()
+            form.save_m2m()  # now this works
 
             # Build email content
             subject = f'New Contact Form Submission - {contact.name}'
@@ -193,21 +195,32 @@ def get_videos_by_type(request, type_id):
     return JsonResponse({'videos': video_data})
 
 # Custom Admin Panel Views
+from django.db.models import Count, Q
+
 @staff_member_required
 def custom_admin_dashboard(request):
+    total_videos = Video.objects.count()
+    total_contacts = Contact.objects.count()
+    uncontacted_leads = Contact.objects.filter(is_contacted=False).count()
+    total_services = Service.objects.count()
+
+    recent_contacts = Contact.objects.order_by('-created_at')[:5]
+    recent_videos = Video.objects.select_related('video_type').order_by('-video_created_at')[:5]
+
     context = {
-        'total_videos': Video.objects.count(),
-        'total_contacts': Contact.objects.count(),
-        'uncontacted_leads': Contact.objects.filter(is_contacted=False).count(),
-        'total_services': Service.objects.count(),
-        'recent_contacts': Contact.objects.order_by('-created_at')[:5],
-        'recent_videos': Video.objects.order_by('-video_created_at')[:5],
+        'total_videos': total_videos,
+        'total_contacts': total_contacts,
+        'uncontacted_leads': uncontacted_leads,
+        'total_services': total_services,
+        'recent_contacts': recent_contacts,
+        'recent_videos': recent_videos,
     }
     return render(request, 'admin/custom_dashboard.html', context)
 
+
 @staff_member_required
 def custom_admin_videos(request):
-    videos = Video.objects.filter(is_featured=True).order_by('order', '-video_created_at')
+    videos = Video.objects.filter(is_featured=True).select_related('video_type').order_by('order', '-video_created_at')
     video_types = VideoType.objects.all()
     context = {
         'videos': videos,
@@ -217,12 +230,10 @@ def custom_admin_videos(request):
 
 @staff_member_required
 def custom_admin_contacts(request):
-    """Contact management list with search, filters and pagination"""
     contacts_qs = Contact.objects.prefetch_related('services').all().order_by('-created_at')
 
-    # Filters
     q = request.GET.get('q', '').strip()
-    contacted = request.GET.get('contacted', '').strip()  # '', 'yes', 'no'
+    contacted = request.GET.get('contacted', '').strip()
     service_id = request.GET.get('service', '').strip()
 
     if q:
@@ -250,7 +261,10 @@ def custom_admin_contacts(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    services = Service.objects.order_by('name')
+    services = Service.objects.all()  # no extra ORDER BY
+
+    # Only one count now
+    filtered_count = paginator.count
 
     context = {
         'contacts': page_obj.object_list,
@@ -260,10 +274,10 @@ def custom_admin_contacts(request):
         'q': q,
         'selected_service': service_id,
         'selected_contacted': contacted,
-        'total_contacts': Contact.objects.count(),
-        'filtered_count': contacts_qs.count(),
+        'filtered_count': filtered_count,
     }
     return render(request, 'admin/contacts.html', context)
+
 
 @staff_member_required
 def custom_admin_services(request):
